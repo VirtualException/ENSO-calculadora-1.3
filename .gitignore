@@ -1,0 +1,42 @@
+# --- Maven ---
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.restore
+release.properties
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+generated/
+
+# --- NetBeans ---
+nbproject/
+nbprivate/
+nbbuild/
+nbdist/
+build/
+dist/
+
+# --- Eclipse ---
+.project
+.classpath
+.settings/
+
+# --- VSCode ---
+.vscode/
+.factorypath
+
+# --- Compiled files ---
+*.class
+*.jar
+*.war
+*.ear
+
+# --- SO files ---
+.DS_Store
+Thumbs.db

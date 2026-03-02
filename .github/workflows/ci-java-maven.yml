@@ -1,0 +1,27 @@
+name: Java CI con Maven
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+      
+      - name: Java JDK 21 configuration
+        uses: actions/setup-java@v4 
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven' # Download and install maven dependencies in pom.xml
+        
+      - name: Build and run tests with Maven
+        # Tests in 'src/test/java' will be run by default
+        # headless flag prevents Swing test errors in github server 
+        run: mvn -B clean install -Djava.awt.headless=true        
