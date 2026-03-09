@@ -16,6 +16,9 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,12 +28,17 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+import javax.swing.BorderFactory;
+import javax.swing.border.LineBorder;
 
 import static calculator.domain.BinaryOperatorModes.*;
 import static calculator.domain.UnaryOperatorModes.*;
 
 public class SwingView implements View {
 
+    private static final Logger LOGGER = Logger.getLogger(SwingView.class.getName());
+    private static final String CONFIG_FILE = "config.properties";
+    
     private final JFrame frame;
     private final JPanel mainPanel;
     private final JPanel[] subPanels;
@@ -44,13 +52,16 @@ public class SwingView implements View {
 
     private EventHandler eventHandler;
 
-    private final Font numberFont = new Font("Segoe UI", Font.BOLD, 18);
-    private final Font functionFont = new Font("Segoe UI", Font.PLAIN, 18);
-    private final Font textFont = new Font("Segoe UI", Font.BOLD, 24);
+    private Font numberFont;
+    private Font functionFont;
+    private Font textFont;
     private final ImageIcon image;
 
     private final DecimalFormat decimalFormat;
     private boolean startNewInput = true;
+    
+    // Configuración
+    private Properties config;
 
     public enum ButtonType { NUMBER, FUNCTION }
 
@@ -60,8 +71,11 @@ public class SwingView implements View {
         symbols.setDecimalSeparator('.');
         decimalFormat = new DecimalFormat("0.###############", symbols);
         decimalFormat.setGroupingUsed(false);
+        
+        // Cargar configuración
+        loadConfiguration();
 
-        frame = new JFrame("Calculator");
+        frame = new JFrame(getConfigProperty("window.title", "Calculator"));
         image = loadIcon();
 
         mainPanel = new JPanel();
@@ -72,24 +86,35 @@ public class SwingView implements View {
             subPanels[i] = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 3));
         }
 
-        // --- JTextField for display ---
+        // Inicializar fontes desde a configuración
+        textFont = getFontFromConfig("display", new Font("Segoe UI", Font.BOLD, 24));
+        numberFont = getFontFromConfig("number", new Font("Segoe UI", Font.BOLD, 18));
+        functionFont = getFontFromConfig("function", new Font("Segoe UI", Font.PLAIN, 18));
+
+        // --- JTextField para display ---
         text = new JTextField();
         text.setFont(textFont);
         text.setEditable(false);
         text.setHorizontalAlignment(JTextField.RIGHT);
         text.setColumns(15);
-        text.setBackground(Color.WHITE);
-        text.setOpaque(true); 
-        text.setBorder(javax.swing.BorderFactory.createLineBorder(
-            UIManager.getColor("Panel.background"), 5));
+        text.setBackground(getColorFromConfig("display.background.color", Color.WHITE));
+        text.setOpaque(true);
+        
+        // Configurar bordo do display
+        int borderSize = getIntConfig("display.border.size", 5);
+        Color borderColor = getColorFromConfig("display.border.color", new Color(238, 238, 238));
+        text.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(borderColor, borderSize),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
 
-        // Number buttons
+        // Botóns numéricos
         butNums = new JButton[10];
         for (int i = 0; i < 10; i++) {
             butNums[i] = createButton(String.valueOf(i), ButtonType.NUMBER);
         }
 
-        // Function buttons
+        // Botóns de función
         butAdd = createButton("+", ButtonType.FUNCTION);
         butMinus = createButton("-", ButtonType.FUNCTION);
         butMultiply = createButton("*", ButtonType.FUNCTION);
@@ -114,11 +139,106 @@ public class SwingView implements View {
         setupLayout();
     }
 
+    /**
+     * Carga a configuración desde o ficheiro properties
+     */
+    private void loadConfiguration() {
+        config = new Properties();
+        try (InputStream input = getClass().getResourceAsStream(CONFIG_FILE)) {
+            if (input == null) {
+                LOGGER.warning("Non se puido atopar config.properties. Usando valores por defecto.");
+                return;
+            }
+            config.load(input);
+            LOGGER.info("Configuración cargada correctamente");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Erro cargando ficheiro de configuración", e);
+        }
+    }
+
+    /**
+     * Obtén unha propiedade de configuración como String
+     */
+    private String getConfigProperty(String key, String defaultValue) {
+        return config != null ? config.getProperty(key, defaultValue) : defaultValue;
+    }
+
+    /**
+     * Obtén unha propiedade de configuración como enteiro
+     */
+    private int getIntConfig(String key, int defaultValue) {
+        if (config == null) return defaultValue;
+        try {
+            return Integer.parseInt(config.getProperty(key, String.valueOf(defaultValue)));
+        } catch (NumberFormatException e) {
+            LOGGER.warning("Formato numérico inválido para " + key + ". Usando default: " + defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Obtén unha propiedade de configuración como booleano
+     */
+    private boolean getBooleanConfig(String key, boolean defaultValue) {
+        if (config == null) return defaultValue;
+        String value = config.getProperty(key, String.valueOf(defaultValue)).toLowerCase();
+        return value.equals("true") || value.equals("yes") || value.equals("1");
+    }
+
+    /**
+     * Obtén unha cor desde a configuración (formato RGB: r,g,b)
+     */
+    private Color getColorFromConfig(String key, Color defaultColor) {
+        if (config == null) return defaultColor;
+        
+        String value = config.getProperty(key);
+        if (value == null) {
+            return defaultColor;
+        }
+        
+        try {
+            String[] rgb = value.split(",");
+            if (rgb.length == 3) {
+                int r = Integer.parseInt(rgb[0].trim());
+                int g = Integer.parseInt(rgb[1].trim());
+                int b = Integer.parseInt(rgb[2].trim());
+                return new Color(r, g, b);
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.warning("Formato de cor inválido para " + key + ". Usando default.");
+        }
+        return defaultColor;
+    }
+
+    /**
+     * Obtén unha fonte desde a configuración
+     */
+    private Font getFontFromConfig(String prefix, Font defaultFont) {
+        if (config == null) return defaultFont;
+        
+        String name = getConfigProperty(prefix + ".font.name", defaultFont.getName());
+        String styleStr = getConfigProperty(prefix + ".font.style", "plain").toLowerCase();
+        int size = getIntConfig(prefix + ".font.size", defaultFont.getSize());
+        
+        int style = Font.PLAIN;
+        if (styleStr.contains("bold")) style |= Font.BOLD;
+        if (styleStr.contains("italic")) style |= Font.ITALIC;
+        
+        return new Font(name, style, size);
+    }
+
     private JButton createButton(String label, ButtonType type) {
         JButton b = new JButton(label);
         b.setFont(type == ButtonType.NUMBER ? numberFont : functionFont);
         b.setPreferredSize(new java.awt.Dimension(80, 40));
-        b.setBackground(type == ButtonType.NUMBER ? Color.WHITE : new Color(220, 255, 255));
+        
+        // Establecer cor de fondo desde configuración
+        if (type == ButtonType.NUMBER) {
+            b.setBackground(getColorFromConfig("number.button.background.color", Color.WHITE));
+        } else {
+            b.setBackground(getColorFromConfig("function.button.background.color", new Color(220, 255, 255)));
+        }
+        
         b.setFocusPainted(false);
         b.setBorderPainted(true);
         b.setOpaque(true);
@@ -193,9 +313,9 @@ public class SwingView implements View {
     }
 
     public void init() {
-        frame.setSize(465, 460);
+        frame.setSize(getIntConfig("window.width", 465), getIntConfig("window.height", 460));
         frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
+        frame.setResizable(getBooleanConfig("window.resizable", false));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         if (image != null) frame.setIconImage(image.getImage());
         frame.add(mainPanel);
@@ -301,12 +421,16 @@ public class SwingView implements View {
     }
 
     private ImageIcon loadIcon() throws IOException {
-        try (InputStream is = getClass().getResourceAsStream("/icon/icon.png")) {
-            if (is == null) return null;
+        String iconPath = getConfigProperty("icon.path", "icon/icon.png");
+        try (InputStream is = getClass().getResourceAsStream(iconPath)) {
+            if (is == null) {
+                System.err.println("Non se puido cargar a icona desde: " + iconPath);
+                return null;
+            }
             BufferedImage bufferedImage = ImageIO.read(is);
             return new ImageIcon(bufferedImage);
         } catch (Exception e) {
-            System.err.println("Could not load icon: " + e.getMessage());
+            System.err.println("Non se puido cargar a icona: " + e.getMessage());
             return null;
         }
     }
