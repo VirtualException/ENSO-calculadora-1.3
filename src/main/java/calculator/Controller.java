@@ -117,6 +117,19 @@ public class Controller implements EventHandler {
         view.clearDisplay();
         resetingInput = false;
     }
+
+    @Override
+    public void onBackspacePressed() {
+        if (resetingInput) return;
+        if (displayBuffer.length() > 0) {
+            displayBuffer.deleteCharAt(displayBuffer.length() - 1);
+            if (displayBuffer.length() == 0) {
+                view.clearDisplay();
+            } else {
+                view.setDisplay(displayBuffer.toString());
+            }
+        }
+    }
     
     private String formatResult(Double result) {
         if (Double.isNaN(result)) {
