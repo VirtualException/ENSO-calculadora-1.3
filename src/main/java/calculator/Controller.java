@@ -62,6 +62,28 @@ public class Controller implements EventHandler {
             view.setDisplay(displayBuffer.toString());
         }
     }
+
+    @Override
+    public void onSpecialNumberPressed(String specialNumber) {
+        if (resetingInput) {
+            displayBuffer = new StringBuilder();
+            view.clearDisplay();
+            resetingInput = false;
+        }
+
+        Double value = null;
+        if ("E".equalsIgnoreCase(specialNumber)) {
+            value = Math.E;
+        }
+        else if ("PI".equalsIgnoreCase(specialNumber)) {
+            value = Math.PI;
+        }
+
+        if (value != null) {
+            displayBuffer = new StringBuilder(value.toString());
+            view.setDisplay(formatResult(value));
+        }
+    }
     
     @Override
     public void onBinaryOperatorPressed(BinaryOperatorModes mode) {
