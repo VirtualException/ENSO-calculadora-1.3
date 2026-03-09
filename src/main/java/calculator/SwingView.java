@@ -10,6 +10,8 @@ package calculator;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +31,7 @@ import javax.swing.UIManager;
 import static calculator.domain.BinaryOperatorModes.*;
 import static calculator.domain.UnaryOperatorModes.*;
 
-public class SwingView implements View {
+public class SwingView implements View, KeyListener {
 
     private final JFrame frame;
     private final JPanel mainPanel;
@@ -199,6 +201,8 @@ public class SwingView implements View {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         if (image != null) frame.setIconImage(image.getImage());
         frame.add(mainPanel);
+        frame.addKeyListener(this);
+        frame.setFocusable(true);
         frame.setVisible(true);
     }
 
@@ -309,5 +313,52 @@ public class SwingView implements View {
             System.err.println("Could not load icon: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (eventHandler == null) return;
+
+        int keyCode = e.getKeyCode();
+        char keyChar = e.getKeyChar();
+
+        // Numbers 0-9
+        if (keyCode >= KeyEvent.VK_0 && keyCode <= KeyEvent.VK_9) {
+            eventHandler.onNumberPressed(keyCode - KeyEvent.VK_0);
+        } else if (keyCode >= KeyEvent.VK_NUMPAD0 && keyCode <= KeyEvent.VK_NUMPAD9) {
+            eventHandler.onNumberPressed(keyCode - KeyEvent.VK_NUMPAD0);
+        }
+        // Basic operators
+        else if (keyCode == KeyEvent.VK_PLUS || keyChar == '+') {
+            eventHandler.onBinaryOperatorPressed(ADD);
+        } else if (keyCode == KeyEvent.VK_MINUS || keyChar == '-') {
+            eventHandler.onBinaryOperatorPressed(MINUS);
+        } else if (keyCode == KeyEvent.VK_MULTIPLY || keyChar == '*') {
+            eventHandler.onBinaryOperatorPressed(MULTIPLY);
+        } else if (keyCode == KeyEvent.VK_DIVIDE || keyChar == '/') {
+            eventHandler.onBinaryOperatorPressed(DIVIDE);
+        }
+        // Decimal point
+        else if (keyCode == KeyEvent.VK_DECIMAL || keyChar == '.') {
+            eventHandler.onDecimalPressed();
+        }
+        // Equals
+        else if (keyCode == KeyEvent.VK_ENTER || keyChar == '=') {
+            eventHandler.onEqualsPressed();
+        }
+        // Clear (C, Delete, Backspace)
+        else if (keyCode == KeyEvent.VK_C || keyCode == KeyEvent.VK_DELETE || keyCode == KeyEvent.VK_BACK_SPACE) {
+            eventHandler.onClearPressed();
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // Not needed for this implementation
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // Not needed for this implementation
     }
 }
