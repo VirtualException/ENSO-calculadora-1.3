@@ -40,7 +40,7 @@ public class SwingView implements View {
     private final JButton butAdd, butMinus, butMultiply, butDivide,
             butEqual, butCancel, butSqrt, butSquare, butInv, butCos, 
             butSin, butTan, butPower, butLog, butPercent, butAbs, butBin, 
-            butln, butNegate, butDecimal;
+            butln, butNegate, butDecimal, butMemSave, butMemRest, butMemClr;
 
     private EventHandler eventHandler;
 
@@ -52,7 +52,7 @@ public class SwingView implements View {
     private final DecimalFormat decimalFormat;
     private boolean startNewInput = true;
 
-    public enum ButtonType { NUMBER, FUNCTION }
+    public enum ButtonType { NUMBER, FUNCTION, CONTROL }
 
     public SwingView() throws IOException {
         Locale.setDefault(Locale.US);
@@ -110,6 +110,9 @@ public class SwingView implements View {
         butBin = createButton("bin", ButtonType.FUNCTION);
         butNegate = createButton("+/-", ButtonType.NUMBER);
         butDecimal = createButton(".", ButtonType.NUMBER);
+        butMemSave = createButton("MS", ButtonType.CONTROL);
+        butMemRest = createButton("MR", ButtonType.CONTROL);
+        butMemClr = createButton("MC", ButtonType.CONTROL);
 
         setupLayout();
     }
@@ -162,6 +165,8 @@ public class SwingView implements View {
         subPanels[4].add(butNegate);
         subPanels[4].add(butNums[0]);
         subPanels[4].add(butDecimal);
+        subPanels[4].add(butMemSave);
+        subPanels[4].add(butMemRest);
         mainPanel.add(subPanels[4]);
 
         // --- Extra separation ---
@@ -171,6 +176,7 @@ public class SwingView implements View {
         subPanels[5].add(butInv);
         subPanels[5].add(butln);
         subPanels[5].add(butLog);
+        subPanels[5].add(butMemClr);
         mainPanel.add(subPanels[5]);
 
         // --- Row 6 ---
