@@ -40,7 +40,7 @@ public class SwingView implements View {
     private final JButton butAdd, butMinus, butMultiply, butDivide,
             butEqual, butCancel, butSqrt, butSquare, butInv, butCos, 
             butSin, butTan, butPower, butLog, butPercent, butAbs, butBin, 
-            butln, butNegate, butDecimal, butBackspace;
+            butln, butNegate, butDecimal, butE, butPi, butBackspace;
 
     private EventHandler eventHandler;
 
@@ -110,6 +110,8 @@ public class SwingView implements View {
         butBin = createButton("bin", ButtonType.FUNCTION);
         butNegate = createButton("+/-", ButtonType.NUMBER);
         butDecimal = createButton(".", ButtonType.NUMBER);
+        butE = createButton("e", ButtonType.NUMBER);
+        butPi = createButton("pi", ButtonType.NUMBER);
         butBackspace = createButton("\u232B", ButtonType.FUNCTION);
 
         setupLayout();
@@ -174,6 +176,8 @@ public class SwingView implements View {
         subPanels[5].add(butInv);
         subPanels[5].add(butln);
         subPanels[5].add(butLog);
+        subPanels[5].add(butE);
+        subPanels[5].add(butPi);
         mainPanel.add(subPanels[5]);
 
         // --- Row 6 ---
@@ -236,6 +240,8 @@ public class SwingView implements View {
 
         // Other actions
         butDecimal.addActionListener(e -> eventHandler.onDecimalPressed());
+        butE.addActionListener(e -> eventHandler.onSpecialNumberPressed("E"));
+        butPi.addActionListener(e -> eventHandler.onSpecialNumberPressed("PI"));
         butEqual.addActionListener(e -> eventHandler.onEqualsPressed());
         butCancel.addActionListener(e -> eventHandler.onClearPressed());
         butBackspace.addActionListener(e -> eventHandler.onBackspacePressed());
