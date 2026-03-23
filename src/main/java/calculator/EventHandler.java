@@ -23,6 +23,12 @@ public interface EventHandler {
      * Handle a decimal point button press
      */
     void onDecimalPressed();
+
+    /**
+     * Handle special number insertion (e.g. e, pi)
+     * @param specialNumber The special number identifier
+     */
+    void onSpecialNumberPressed(String specialNumber);
     
     /**
      * Handle a binary operator button press
@@ -45,4 +51,9 @@ public interface EventHandler {
      * Handle the clear/reset button press
      */
     void onClearPressed();
+
+    /**
+     * Handle the backspace button press
+     */
+    void onBackspacePressed();
 }
